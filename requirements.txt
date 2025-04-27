@@ -1,0 +1,6 @@
+streamlit
+pdfplumber
+langchain
+langchain-community
+langchain-ollama
+faiss-cpu
