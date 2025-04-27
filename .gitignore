@@ -1,0 +1,20 @@
+# Ignore environment variables
+.env
+
+# Ignore PDF files everywhere
+*.pdf
+
+# Ignore CSV and JSON files everywhere EXCEPT in data/
+# (remove or comment out these lines)
+# *.csv
+# *.json
+
+# Ignore everything in data/ EXCEPT CSV, JSON, and .gitkeep
+data/*
+!data/*.csv
+!data/*.json
+!data/.gitkeep
+
+extracted_texts/
+vector_store/
+__pycache__/
