@@ -1,6 +1,8 @@
 streamlit
-pdfplumber
 langchain
-langchain-community
-langchain-ollama
+openai
+pdfplumber
+python-dotenv
+chromadb
+tiktoken
 faiss-cpu

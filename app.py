@@ -8,10 +8,11 @@ import hashlib
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI  # Changed from Ollama
+from langchain.embeddings import OpenAIEmbeddings  # Updated import
+from langchain.chat_models import ChatOpenAI      # Updated import
 from langchain.docstore.document import Document
 import time
-from dotenv import load_dotenv  # Added for .env support
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -21,7 +22,7 @@ VECTOR_DIR = "./vector_store"
 DATA_PATH = "data"
 SPLITTER = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
-# Initialize OpenAI models (replaced Ollama)
+# Initialize OpenAI models
 embeddings = OpenAIEmbeddings()  # Uses 'text-embedding-ada-002' by default
 llm = ChatOpenAI(
     model_name="gpt-3.5-turbo",
@@ -30,7 +31,6 @@ llm = ChatOpenAI(
 
 processed_pdfs = set()
 
-# Rest of your functions remain the same
 @st.cache_resource
 def load_vectorstore():
     if os.path.exists(VECTOR_DIR):
@@ -41,7 +41,15 @@ def load_vectorstore():
             return None
     return None
 
-# Your other functions (load_all_data, process_pdf) remain exactly the same
+def process_pdf(pdf_file) -> List[Document]:
+    """Extract text from a PDF and split into LangChain Documents."""
+    docs = []
+    with pdfplumber.open(pdf_file) as pdf:
+        for i, page in enumerate(pdf.pages):
+            text = page.extract_text()
+            if text:
+                docs.extend(SPLITTER.create_documents([text], metadatas=[{"source": f"{pdf_file.name}_page_{i+1}"}]))
+    return docs
 
 def ask_llm(vectorstore, question: str, k: int = 5) -> str:
     try:
@@ -53,4 +61,30 @@ def ask_llm(vectorstore, question: str, k: int = 5) -> str:
         st.error(f"LLM query failed: {e}")
         return "Sorry, I couldn't process your question."
 
-# UI section remains exactly the same as your original code
+# Streamlit UI
+st.title("Plumb Genius: Plumbing Code Chatbot")
+
+# Upload PDF(s)
+uploaded_files = st.file_uploader("Upload PDF(s) to add to the knowledge base", type="pdf", accept_multiple_files=True)
+if uploaded_files:
+    all_docs = []
+    for pdf_file in uploaded_files:
+        docs = process_pdf(pdf_file)
+        all_docs.extend(docs)
+    if all_docs:
+        vectorstore = FAISS.from_documents(all_docs, embeddings)
+        vectorstore.save_local(VECTOR_DIR)
+        st.success("PDFs processed and vector store updated!")
+    else:
+        st.warning("No text found in uploaded PDFs.")
+
+# Load vector store
+vectorstore = load_vectorstore()
+if vectorstore is None:
+    st.info("Please upload PDFs to build the knowledge base.")
+else:
+    # Chat interface
+    question = st.text_input("Ask a plumbing question:")
+    if question:
+        answer = ask_llm(vectorstore, question)
+        st.markdown(f"**Answer:** {answer}")
