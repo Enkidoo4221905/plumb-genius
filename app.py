@@ -1,17 +1,12 @@
 import streamlit as st
 import os
 import pdfplumber
-import json
-import glob
-import csv
-import hashlib
 from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings  # Updated import
-from langchain.chat_models import ChatOpenAI      # Updated import
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chat_models import ChatOpenAI
 from langchain.docstore.document import Document
-import time
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -19,17 +14,14 @@ load_dotenv()
 
 # Constants
 VECTOR_DIR = "./vector_store"
-DATA_PATH = "data"
 SPLITTER = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 
 # Initialize OpenAI models
-embeddings = OpenAIEmbeddings()  # Uses 'text-embedding-ada-002' by default
+embeddings = OpenAIEmbeddings()
 llm = ChatOpenAI(
     model_name="gpt-3.5-turbo",
     temperature=0.7
 )
-
-processed_pdfs = set()
 
 @st.cache_resource
 def load_vectorstore():
@@ -65,7 +57,12 @@ def ask_llm(vectorstore, question: str, k: int = 5) -> str:
 st.title("Plumb Genius: Plumbing Code Chatbot")
 
 # Upload PDF(s)
-uploaded_files = st.file_uploader("Upload PDF(s) to add to the knowledge base", type="pdf", accept_multiple_files=True)
+uploaded_files = st.file_uploader(
+    "Upload PDF(s) to add to the knowledge base",
+    type="pdf",
+    accept_multiple_files=True
+)
+
 if uploaded_files:
     all_docs = []
     for pdf_file in uploaded_files:
@@ -78,13 +75,13 @@ if uploaded_files:
     else:
         st.warning("No text found in uploaded PDFs.")
 
-# Load vector store
+# Always try to load the vector store
 vectorstore = load_vectorstore()
-if vectorstore is None:
-    st.info("Please upload PDFs to build the knowledge base.")
-else:
-    # Chat interface
+
+if vectorstore is not None:
     question = st.text_input("Ask a plumbing question:")
     if question:
         answer = ask_llm(vectorstore, question)
         st.markdown(f"**Answer:** {answer}")
+else:
+    st.info("Please upload PDFs to build the knowledge base.")
