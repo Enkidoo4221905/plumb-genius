@@ -1,16 +1,3 @@
-import streamlit as st
-import os
-import pdfplumber
-import json
-import csv
-from typing import List
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
-from langchain.docstore.document import Document
-from dotenv import load_dotenv
-
 # Load environment variables
 load_dotenv()
 
