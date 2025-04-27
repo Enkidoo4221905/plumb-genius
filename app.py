@@ -1,5 +1,19 @@
+import streamlit as st
+import os
+import pdfplumber
+import json
+import glob
+import csv
+from typing import List
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.docstore.document import Document
+from dotenv import load_dotenv  # Import first
+
 # Load environment variables
-load_dotenv()
+load_dotenv()  # Then use it
 
 # Constants
 VECTOR_DIR = "./vector_store"
